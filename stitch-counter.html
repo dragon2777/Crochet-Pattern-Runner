@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Crochet Pattern Runner</title>
+
+<style>
+body{
+    font-family:Arial;
+    background:#1e1e1e;
+    color:white;
+    text-align:center;
+    padding:25px;
+}
+
+textarea{
+    width:500px;
+    height:180px;
+    font-size:16px;
+}
+
+button{
+    padding:10px 20px;
+    margin-top:10px;
+    font-size:16px;
+    border:none;
+    border-radius:6px;
+    background:#4CAF50;
+    color:white;
+}
+
+.counter{
+    font-size:22px;
+    margin-top:20px;
+}
+
+.stitch{
+    margin-top:25px;
+    padding:40px;
+    font-size:34px;
+    border-radius:15px;
+}
+
+.normal{background:#2d89ef;}
+.increase{background:#ff7a00;}
+.decrease{background:#b84dff;}
+.good{background:#2ecc71;}
+.bad{background:#e74c3c;}
+
+.rowBox{
+    margin-top:15px;
+    font-size:20px;
+    opacity:.9;
+}
+
+/* ================= ROW LIST ================= */
+
+#rowList{
+    margin:20px auto;
+    max-width:500px;
+    text-align:left;
+}
+
+.rowItem{
+    padding:6px 10px;
+    border-radius:6px;
+    margin:3px 0;
+    background:#2a2a2a;
+}
+
+.rowActive{
+    background:#ffd54a;
+    color:black;
+    font-weight:bold;
+}
+
+/* ================= SEQUENCE BAR ================= */
+
+#sequence{
+    margin-top:20px;
+    padding:10px;
+    background:#111;
+    border-radius:12px;
+    overflow-x:auto;
+    white-space:nowrap;
+}
+
+.seq{
+    display:inline-block;
+    padding:14px;
+    margin:4px;
+    min-width:70px;
+    font-size:20px;
+    border-radius:10px;
+    background:#444;
+}
+
+.seq.active{
+    background:#4CAF50;
+    transform:scale(1.15);
+}
+
+/* ================= SEQUENCE STATES ================= */
+
+.seq{
+    display:inline-block;
+    padding:14px;
+    margin:4px;
+    min-width:70px;
+    font-size:20px;
+    border-radius:10px;
+    background:#444;
+    transition:all .2s ease;
+}
+
+/* completed stitches */
+
+.seq.done{
+    opacity:0.25;
+}
+
+/* active stitch */
+
+.seq.active{
+    background:#4CAF50;
+    transform:scale(1.15);
+    box-shadow:0 0 10px #4CAF50;
+}
+
+/* upcoming stitches */
+
+.seq.upcoming{
+    opacity:0.9;
+}
+
+/* ================= ROW PROGRESS BAR ================= */
+
+#rowProgressContainer{
+    width:100%;
+    height:12px;
+    background:#333;
+    border-radius:6px;
+    margin-top:10px;
+    overflow:hidden;
+}
+
+#rowProgressBar{
+    height:100%;
+    width:0%;
+    background:#4CAF50;
+    transition:width .2s ease;
+}
+
+/* ================= ROW PROGRESS BAR ================= */
+
+#rowProgressContainer{
+    width:100%;
+    height:18px;
+    background:#333;
+    border-radius:8px;
+    margin-top:10px;
+    overflow:hidden;
+    position:relative;
+}
+
+#rowProgressBar{
+    height:100%;
+    width:0%;
+    background:#4CAF50;
+    transition:width .2s ease;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+#rowProgressText{
+    font-size:12px;
+    color:white;
+    pointer-events:none;
+}
+
+#sequence{
+    scroll-behavior:smooth;
+}
+
+/* ================= SEQUENCE WRAPPER ================= */
+
+#sequenceWrapper{
+    position:relative;
+    overflow:hidden;
+    margin-top:20px;
+}
+
+/* scrolling sequence */
+
+#sequence{
+    display:flex;
+    overflow-x:auto;
+    white-space:nowrap;
+    padding:10px 40px; /* space for fades */
+}
+
+/* ================= EDGE FADES ================= */
+
+#sequenceWrapper::before,
+#sequenceWrapper::after{
+    content:"";
+    position:absolute;
+    top:0;
+    bottom:0;
+    width:40px;
+    pointer-events:none;
+    z-index:5;
+}
+
+/* left fade */
+
+#sequenceWrapper::before{
+    left:0;
+    background:linear-gradient(
+        to right,
+        #1e1e1e,
+        transparent
+    );
+}
+
+/* right fade */
+
+#sequenceWrapper::after{
+    right:0;
+    background:linear-gradient(
+        to left,
+        #1e1e1e,
+        transparent
+    );
+}
+
+/* ================= STITCH COLORS ================= */
+
+.sc{ background:#2d89ef; }      /* single crochet */
+.hdc{ background:#00a8a8; }     /* half double */
+.dc{ background:#e67e22; }      /* double crochet */
+.tr{ background:#c0392b; }      /* treble */
+
+.ch{ background:#7f8c8d; }      /* chain */
+.slst{ background:#8e44ad; }    /* slip stitch */
+
+.inc{ background:#ff7a00; }     /* increase */
+.dec{ background:#b84dff; }     /* decrease */
+
+/* ================= STITCH LEGEND ================= */
+
+#stitchLegend{
+    margin-top:20px;
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:10px;
+
+    .legendItem{
+        padding:6px 12px;
+        border-radius:6px;
+        font-size:14px;
+        font-weight:bold;
+        color:white;
+        display:inline-block;
+    }
+}
+
+.legendItem{
+    padding:6px 12px;
+    border-radius:6px;
+    font-size:14px;
+    font-weight:bold;
+    color:white;
+}
+
+#helpPanel{
+    display:none;
+    background:#111;
+    padding:20px;
+    border-radius:10px;
+    margin-top:20px;
+    text-align:left;
+}
+
+#helpPanel h2{
+    margin-top:0;
+}
+
+#helpPanel pre{
+    background:#222;
+    padding:10px;
+    border-radius:6px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🧶 Crochet Pattern Runner</h1>
+
+<textarea id="patternInput">
+Row 1: sc 6 (6)
+Row 2: (inc) x6 (12)
+Row 3: (sc 1, inc) x6 (18)
+Row 4: sc around (18)
+</textarea><br>
+
+<div id="helpPanel">
+
+<h2>Pattern Runner Help</h2>
+
+<h3>Supported Stitches</h3>
+
+<ul>
+<li><b>ch</b> — Chain</li>
+<li><b>slst</b> — Slip Stitch</li>
+<li><b>sc</b> — Single Crochet</li>
+<li><b>hdc</b> — Half Double Crochet</li>
+<li><b>dc</b> — Double Crochet</li>
+<li><b>tr</b> — Treble Crochet</li>
+<li><b>inc</b> — Increase</li>
+<li><b>dec</b> — Decrease</li>
+</ul>
+
+<h3>Syntax Guide</h3>
+
+<p><b>Basic Row</b></p>
+
+<pre>Row 1: sc 6 (6)</pre>
+
+<p><b>Repeats</b></p>
+
+<pre>(sc 1, inc) x6</pre>
+
+<p><b>Row Targets</b></p>
+
+<pre>(18)</pre>
+
+<p>The number in parentheses indicates the expected stitch count.</p>
+
+<p><b>Around</b></p>
+
+<pre>sc around (18)</pre>
+
+<p>This fills the row with single crochet stitches.</p>
+
+<h3>Example Pattern</h3>
+
+<pre>
+Row 1: sc 6 (6)
+Row 2: (inc) x6 (12)
+Row 3: (sc 1, inc) x6 (18)
+Row 4: sc around (18)
+</pre>
+
+</div>
+
+<button onclick="loadPattern()">Load Pattern</button>
+<button onclick="toggleHelp()">Help</button>
+
+<div id="rowList"></div>
+
+<div class="rowBox">
+Current Instruction:<br>
+<span id="rowInstruction">—</span>
+</div>
+
+<div id="stitchLegend"></div>
+
+<div id="sequenceWrapper">
+    <div id="sequence"></div>
+</div>
+
+<div id="rowProgressContainer">
+    <div id="rowProgressBar">
+        <span id="rowProgressText">0 / 0</span>
+    </div>
+</div>
+
+<div class="counter">
+Row: <span id="row">1</span>/<span id="totalRows">0</span><br>
+Step: <span id="step">0</span>/<span id="totalSteps">0</span><br>
+Stitches: <span id="stitches">0</span><br>
+Target: <span id="target">—</span>
+</div>
+
+<div id="display" class="stitch normal">
+Press Load Pattern
+</div>
+
+<p>Advance: SPACE | Undo: BACKSPACE or Z</p>
+
+<script>
+let rows=[];
+let currentRow=0;
+let actions=[];
+let index=0;
+let stitchTotal=0;
+let running=false;
+
+const stitchValues={
+
+    /* base stitches */
+
+    sc:1,
+    hdc:1,
+    dc:1,
+    tr:1,
+
+    /* structural stitches */
+
+    ch:0,
+    slst:0,
+
+    /* shaping */
+
+    inc:2,
+    dec:1
+};
+
+const stitchOrder = [
+    "ch",
+    "slst",
+    "sc",
+    "hdc",
+    "dc",
+    "tr",
+    "inc",
+    "dec"
+];
+
+/* ================= PARSER ================= */
+
+function parseTarget(text){
+    let m=text.match(/\((\d+)/);
+    return m?parseInt(m[1]):null;
+}
+
+function parseSequence(text){
+    let result=[];
+    text=text.replace(/around/gi,"");
+
+    text.split(",").forEach(p=>{
+        let m=p.trim().toLowerCase()
+            .match(/(sc|hdc|dc|tr|ch|slst|inc|dec)\s*(\d+)?/)
+
+        if(m){
+            let type=m[1];
+            let count=parseInt(m[2]||1);
+            for(let i=0;i<count;i++) result.push(type);
+        }
+    });
+
+    return result;
+}
+
+function centerActiveStitch(){
+
+    const active = sequence.querySelector(".seq.active");
+
+    if(!active) return;
+
+    const container = sequence;
+
+    const containerCenter = container.clientWidth / 2;
+
+    const stitchCenter =
+        active.offsetLeft + (active.offsetWidth / 2);
+
+    const scrollPosition =
+        stitchCenter - containerCenter;
+
+    container.scrollTo({
+        left: scrollPosition,
+        behavior: "smooth"
+    });
+}
+
+function expandGroups(line){
+    let output=[];
+    let regex=/\((.*?)\)\s*x\s*(\d+)/gi;
+    let last=0,match;
+
+    while((match=regex.exec(line))){
+        output.push(...parseSequence(line.substring(last,match.index)));
+
+        let seq=parseSequence(match[1]);
+        let rep=parseInt(match[2]);
+
+        for(let i=0;i<rep;i++) output.push(...seq);
+
+        last=regex.lastIndex;
+    }
+
+    output.push(...parseSequence(line.substring(last)));
+    return output;
+}
+
+function parseRows(text){
+    let lines=text.split("\n").filter(l=>l.trim());
+    let result=[];
+
+    lines.forEach(line=>{
+        result.push({
+            instruction:line.trim(),
+            target:parseTarget(line),
+            actions:expandGroups(line)
+        });
+    });
+
+    return result;
+}
+
+/* ================= ROW UI ================= */
+
+function buildRowList(){
+    rowList.innerHTML="";
+    rows.forEach((r,i)=>{
+        let div=document.createElement("div");
+        div.className="rowItem";
+        if(i===currentRow) div.classList.add("rowActive");
+        div.textContent=r.instruction;
+        rowList.appendChild(div);
+    });
+}
+
+function buildLegend(){
+
+    const legend = document.getElementById("stitchLegend");
+    legend.innerHTML = "";
+
+    const used = new Set();
+
+    rows.forEach(r=>{
+        r.actions.forEach(a=>{
+            used.add(a);
+        });
+    });
+
+    /* sort stitches logically */
+
+    const sorted = stitchOrder.filter(s => used.has(s));
+
+    sorted.forEach(stitch => {
+
+        let item = document.createElement("div");
+
+        item.className = "legendItem " + stitch;
+
+        item.textContent = stitch.toUpperCase();
+
+        legend.appendChild(item);
+    });
+}
+
+/* ================= SEQUENCE BAR ================= */
+
+function buildSequence(){
+
+    sequence.innerHTML="";
+
+    actions.forEach((a,i)=>{
+
+        let d=document.createElement("div");
+        d.className="seq " + a;
+        d.textContent=a.toUpperCase();
+
+        if(i < index-1){
+            d.classList.add("done");
+        }
+        else if(i === index-1){
+            d.classList.add("active");
+        }
+        else{
+            d.classList.add("upcoming");
+        }
+
+        sequence.appendChild(d);
+    });
+
+    centerActiveStitch();
+}
+
+/* ================= RUNNER ================= */
+
+function loadPattern(){
+    rows=parseRows(patternInput.value);
+    buildLegend();
+    totalRows.textContent=rows.length;
+    currentRow=0;
+    running=true;
+    startRow();
+}
+
+function startRow(){
+    let rowData=rows[currentRow];
+
+    actions=[...rowData.actions];
+    index=0;
+    stitchTotal=0;
+
+    if(actions.length===0 && rowData.target){
+        for(let i=0;i<rowData.target;i++) actions.push("sc");
+    }
+
+    rowInstruction.textContent=rowData.instruction;
+    totalSteps.textContent=actions.length;
+    targetSpan.textContent=rowData.target ?? "—";
+    rowSpan.textContent=currentRow+1;
+
+    buildRowList();
+    buildSequence();
+    updateDisplay();
+}
+
+function advance(){
+
+    if(index>=actions.length){
+        validateRow();
+        currentRow++;
+
+        if(currentRow>=rows.length){
+            display.innerText="🎉 Pattern Complete!";
+            display.className="stitch good";
+            running=false;
+            return;
+        }
+
+        startRow();
+        return;
+    }
+
+    stitchTotal+=stitchValues[actions[index]];
+    index++;
+
+    buildSequence();
+    updateDisplay();
+}
+
+function undo(){
+    if(index===0 && currentRow===0) return;
+
+    if(index===0){
+        currentRow--;
+        startRow();
+        index=actions.length;
+        stitchTotal=rows[currentRow].target||0;
+    }
+
+    index--;
+    stitchTotal-=stitchValues[actions[index]];
+
+    buildSequence();
+    updateDisplay();
+}
+
+function validateRow(){
+    let target=rows[currentRow].target;
+    if(target==null) return;
+
+    if(stitchTotal===target){
+        display.innerText="✅ Row correct";
+        display.className="stitch good";
+    }else{
+        display.innerText=`⚠ Expected ${target} got ${stitchTotal}`;
+        display.className="stitch bad";
+    }
+}
+
+function toggleHelp(){
+
+    const panel = document.getElementById("helpPanel");
+
+    if(panel.style.display === "none"){
+        panel.style.display = "block";
+    }else{
+        panel.style.display = "none";
+    }
+}
+
+function updateDisplay(){
+
+    stepSpan.textContent = index;
+    stitchSpan.textContent = stitchTotal;
+
+    /* =============================
+       START OF ROW
+    ============================== */
+
+    if(index === 0){
+        display.innerText = rows[currentRow].instruction;
+        display.className = "stitch normal";
+
+        updateRowProgress();
+        return;
+    }
+
+    /* =============================
+       CURRENT STITCH
+    ============================== */
+
+    const stitchNames={
+        sc:"Single Crochet (+1)",
+        hdc:"Half Double Crochet (+1)",
+        dc:"Double Crochet (+1)",
+        tr:"Treble Crochet (+1)",
+        ch:"Chain",
+        slst:"Slip Stitch",
+        inc:"⭐ Increase (+2)",
+        dec:"⭐ Decrease (-1)"
+    };
+
+    let action = actions[index-1];
+
+    display.innerText = stitchNames[action] || action;
+    display.className = "stitch normal";
+
+    if(action==="inc") display.className="stitch increase";
+    if(action==="dec") display.className="stitch decrease";
+
+    updateRowProgress();
+}
+
+function updateRowProgress(){
+
+    if(actions.length === 0){
+        rowProgressBar.style.width = "0%";
+        rowProgressText.textContent = "0 / 0";
+        return;
+    }
+
+    const percent = (index / actions.length) * 100;
+
+    rowProgressBar.style.width = percent + "%";
+
+    rowProgressText.textContent =
+        index + " / " + actions.length + " stitches";
+}
+
+/* ================= KEYBOARD ================= */
+
+document.addEventListener("keydown",(e)=>{
+    if(!running) return;
+    if(e.target.tagName==="TEXTAREA") return;
+
+    if(e.code==="Backspace"||e.key.toLowerCase()==="z"){
+        e.preventDefault();
+        undo();
+        return;
+    }
+
+    if(e.code==="Space"){
+        e.preventDefault();
+        advance();
+    }
+});
+
+/* ================= DOM ================= */
+
+const rowSpan=document.getElementById("row");
+const stepSpan=document.getElementById("step");
+const stitchSpan=document.getElementById("stitches");
+const targetSpan=document.getElementById("target");
+const display=document.getElementById("display");
+const rowList=document.getElementById("rowList");
+const sequence=document.getElementById("sequence");
+
+</script>
+
+</body>
+</html>
